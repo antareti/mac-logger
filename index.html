@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>BLACK TRACE :: CITY LOCK</title>
+<title>BLACK TRACE :: TACTICAL HUD</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -19,16 +19,16 @@ body {
   align-items: center;
 }
 .panel {
-  width: 460px;
-  background: rgba(0,0,0,0.92);
+  width: 480px;
+  background: rgba(0,0,0,0.93);
   border: 1px solid #00ff9c22;
   border-radius: 14px;
-  padding: 18px;
-  box-shadow: 0 0 100px #00ff9c22;
+  padding: 16px;
+  box-shadow: 0 0 120px #00ff9c22;
 }
 h1 {
   text-align: center;
-  font-size: 17px;
+  font-size: 16px;
   letter-spacing: 2px;
 }
 input, button {
@@ -46,56 +46,69 @@ button:hover {
   cursor: pointer;
 }
 #terminal {
-  margin-top: 12px;
+  margin-top: 10px;
   background: #000;
   border: 1px solid #00ff9c22;
   padding: 10px;
-  height: 140px;
+  height: 120px;
+  font-size: 12px;
   overflow-y: auto;
-  font-size: 13px;
 }
 #map {
-  height: 260px;
-  margin-top: 14px;
+  height: 280px;
+  margin-top: 12px;
   border-radius: 10px;
-  display: none;
+}
+.hud {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.hud span {
+  opacity: 0.8;
 }
 .fake {
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   opacity: 0.35;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 </style>
 </head>
 <body>
 
 <div class="panel">
-  <h1>BLACK TRACE :: GEO CITY</h1>
+  <h1>BLACK TRACE :: TACTICAL HUD</h1>
 
   <input placeholder="AA:BB:CC:DD:EE:FF">
-  <button onclick="scan()">START TRACE</button>
+  <button onclick="start()">ENGAGE TRACK</button>
 
   <div id="terminal"></div>
   <div id="map"></div>
 
-  <div class="fake">REAL CITIES · REAL MAP · FAKE TRACE</div>
+  <div class="hud">
+    <span id="hud-coord">LAT -- | LON --</span>
+    <span id="hud-speed">SPD -- km/h</span>
+    <span id="hud-sat">SAT LINK</span>
+  </div>
+
+  <div class="fake">SIMULATION · VISUAL ONLY · NO REAL TRACKING</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const term = document.getElementById("terminal");
-let map, marker;
+const hudCoord = document.getElementById("hud-coord");
+const hudSpeed = document.getElementById("hud-speed");
 
-// Реальные города
+let map, marker, circle, moveInterval;
+
 const cities = [
-  {name:"Berlin", country:"Germany", lat:52.5200, lon:13.4050},
-  {name:"Paris", country:"France", lat:48.8566, lon:2.3522},
-  {name:"Tokyo", country:"Japan", lat:35.6895, lon:139.6917},
-  {name:"New York", country:"USA", lat:40.7128, lon:-74.0060},
-  {name:"London", country:"UK", lat:51.5074, lon:-0.1278},
-  {name:"Rome", country:"Italy", lat:41.9028, lon:12.4964},
-  {name:"Warsaw", country:"Poland", lat:52.2297, lon:21.0122}
+  {name:"Berlin", country:"Germany", lat:52.52, lon:13.405, districts:["Mitte","Kreuzberg","Prenzlauer Berg"]},
+  {name:"Paris", country:"France", lat:48.8566, lon:2.3522, districts:["Montmartre","Latin Quarter","La Défense"]},
+  {name:"Tokyo", country:"Japan", lat:35.6895, lon:139.6917, districts:["Shinjuku","Shibuya","Akihabara"]},
+  {name:"New York", country:"USA", lat:40.7128, lon:-74.0060, districts:["Manhattan","Brooklyn","Queens"]}
 ];
 
 function log(t){
@@ -105,36 +118,50 @@ function log(t){
 function d(ms){return new Promise(r=>setTimeout(r,ms))}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 
-async function scan(){
+async function start(){
   term.innerHTML="";
-  document.getElementById("map").style.display="none";
+  clearInterval(moveInterval);
 
-  log(">> initializing satellite uplink");
+  log(">> SATELLITE LINK ESTABLISHED");
+  await d(500);
+  log(">> GPS TRIANGULATION ACTIVE");
   await d(600);
-  log(">> decrypting network packets");
-  await d(600);
-  log(">> triangulating signal");
-  await d(800);
 
   const city = pick(cities);
+  const district = pick(city.districts);
 
-  log(">> country: "+city.country);
-  log(">> city: "+city.name);
-  log(">> precision: ±4.1m");
-  log(">> location confirmed");
+  // случайная улица (смещение от центра)
+  let lat = city.lat + (Math.random()-0.5)*0.02;
+  let lon = city.lon + (Math.random()-0.5)*0.02;
 
-  showMap(city.lat, city.lon);
+  log(">> COUNTRY: "+city.country);
+  log(">> CITY: "+city.name);
+  log(">> DISTRICT: "+district);
+  log(">> TRACKING TARGET");
+
+  initMap(lat, lon);
+
+  moveInterval = setInterval(()=>{
+    lat += (Math.random()-0.5)*0.0003;
+    lon += (Math.random()-0.5)*0.0003;
+
+    marker.setLatLng([lat,lon]);
+    circle.setLatLng([lat,lon]);
+
+    hudCoord.textContent = 
+      "LAT "+lat.toFixed(5)+" | LON "+lon.toFixed(5);
+
+    hudSpeed.textContent = 
+      "SPD "+(20+Math.random()*40).toFixed(1)+" km/h";
+  }, 1200);
 }
 
-function showMap(lat, lon){
-  const m = document.getElementById("map");
-  m.style.display="block";
-
+function initMap(lat, lon){
   if(!map){
     map = L.map('map',{
       zoomControl:false,
       attributionControl:false
-    }).setView([lat,lon], 15);
+    }).setView([lat,lon], 17);
 
     L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -142,9 +169,15 @@ function showMap(lat, lon){
     ).addTo(map);
 
     marker = L.marker([lat,lon]).addTo(map);
+
+    circle = L.circle([lat,lon],{
+      radius: 25,
+      color:"#00ff9c",
+      fillColor:"#00ff9c",
+      fillOpacity:0.15
+    }).addTo(map);
   } else {
-    map.setView([lat,lon],15);
-    marker.setLatLng([lat,lon]);
+    map.setView([lat,lon],17);
   }
 }
 </script>
