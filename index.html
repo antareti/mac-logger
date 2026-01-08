@@ -24,7 +24,6 @@ body {
   border: 1px solid #00ff9c22;
   border-radius: 14px;
   padding: 16px;
-  box-shadow: 0 0 120px #00ff9c22;
 }
 h1 {
   text-align: center;
@@ -50,18 +49,17 @@ button:hover {
   background: #000;
   border: 1px solid #00ff9c22;
   padding: 10px;
-  height: 120px;
+  height: 110px;
   font-size: 12px;
   overflow-y: auto;
 }
 
-/* === MAP === */
+/* MAP */
 #map {
   height: 280px;
   margin-top: 12px;
   border-radius: 10px;
   position: relative;
-  filter: brightness(0.9) contrast(1.15);
   overflow: hidden;
 }
 
@@ -69,18 +67,18 @@ button:hover {
 .map-grid {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background:
     repeating-linear-gradient(
-      0deg, transparent, transparent 19px, rgba(0,255,156,0.05) 20px
+      0deg, transparent, transparent 19px, rgba(0,255,156,0.06) 20px
     ),
     repeating-linear-gradient(
-      90deg, transparent, transparent 19px, rgba(0,255,156,0.05) 20px
+      90deg, transparent, transparent 19px, rgba(0,255,156,0.06) 20px
     );
-  pointer-events: none;
   z-index: 400;
 }
 
-/* FLASHLIGHT */
+/* FLASHLIGHT — ОСЛАБЛЕН */
 .flashlight {
   position: absolute;
   inset: 0;
@@ -88,12 +86,33 @@ button:hover {
   z-index: 500;
   background:
     radial-gradient(
-      circle 110px at center,
+      circle 130px at center,
       rgba(0,0,0,0) 0%,
-      rgba(0,0,0,0.15) 45%,
-      rgba(0,0,0,0.45) 70%,
-      rgba(0,0,0,0.65) 100%
+      rgba(0,0,0,0.08) 45%,
+      rgba(0,0,0,0.25) 70%,
+      rgba(0,0,0,0.35) 100%
     );
+}
+
+/* FACE */
+.face-box {
+  margin-top: 12px;
+  border: 1px solid #00ff9c22;
+  padding: 8px;
+  border-radius: 10px;
+  text-align: center;
+}
+.face-box img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #00ff9c55;
+}
+.face-title {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-bottom: 6px;
 }
 
 /* HUD */
@@ -109,28 +128,6 @@ button:hover {
   opacity: 0.35;
   margin-top: 6px;
 }
-
-/* FACE */
-.face-box {
-  margin-top: 12px;
-  border: 1px solid #00ff9c22;
-  padding: 8px;
-  border-radius: 10px;
-  text-align: center;
-  background: #000;
-}
-.face-box img {
-  width: 120px;
-  height: 120px;
-  border-radius: 6px;
-  object-fit: cover;
-  border: 1px solid #00ff9c55;
-}
-.face-title {
-  font-size: 11px;
-  opacity: 0.8;
-  margin-bottom: 6px;
-}
 </style>
 </head>
 
@@ -144,7 +141,7 @@ button:hover {
   <div id="terminal"></div>
 
   <div class="face-box" id="faceBox" style="display:none;">
-    <div class="face-title">TARGET FACE (AI)</div>
+    <div class="face-title">TARGET FACE</div>
     <img id="faceImg">
   </div>
 
@@ -159,103 +156,76 @@ button:hover {
     <span>SAT LINK</span>
   </div>
 
-  <div class="fake">SIMULATION · VISUAL ONLY · NO REAL TRACKING</div>
+  <div class="fake">SIMULATION · VISUAL ONLY</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const term = document.getElementById("terminal");
-const hudCoord = document.getElementById("hud-coord");
-const hudSpeed = document.getElementById("hud-speed");
 const faceBox = document.getElementById("faceBox");
 const faceImg = document.getElementById("faceImg");
+const hudCoord = document.getElementById("hud-coord");
+const hudSpeed = document.getElementById("hud-speed");
 const flashlight = document.getElementById("flashlight");
 
-let map, marker, circle, moveInterval;
+let map, marker, circle, timer;
 
-const cities = [
-  {name:"Berlin", lat:52.52, lon:13.405},
-  {name:"Paris", lat:48.8566, lon:2.3522},
-  {name:"Tokyo", lat:35.6895, lon:139.6917},
-  {name:"New York", lat:40.7128, lon:-74.0060}
-];
-
-function log(t){
-  term.innerHTML += t+"<br>";
-  term.scrollTop = term.scrollHeight;
-}
-function d(ms){return new Promise(r=>setTimeout(r,ms))}
-function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function log(t){ term.innerHTML += t+"<br>"; }
 
 async function loadFace(){
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = "https://thispersondoesnotexist.com/image?" + Date.now();
-  img.onload = () => {
-    faceImg.src = img.src;
-    faceBox.style.display = "block";
-  };
+  const r = await fetch("https://randomuser.me/api/?inc=picture&noinfo");
+  const j = await r.json();
+  faceImg.src = j.results[0].picture.large;
+  faceBox.style.display = "block";
 }
 
 async function start(){
   term.innerHTML="";
-  clearInterval(moveInterval);
+  clearInterval(timer);
   await loadFace();
 
-  log(">> SATELLITE LINK ESTABLISHED");
-  await d(400);
-  log(">> GPS TRIANGULATION ACTIVE");
+  log(">> SATELLITE LINK OK");
+  log(">> TARGET LOCKED");
 
-  const city = pick(cities);
-  let lat = city.lat + (Math.random()-0.5)*0.02;
-  let lon = city.lon + (Math.random()-0.5)*0.02;
+  let lat = 52.52 + (Math.random()-0.5)*0.02;
+  let lon = 13.40 + (Math.random()-0.5)*0.02;
 
-  initMap(lat, lon);
+  if(!map){
+    map = L.map("map",{zoomControl:false, attributionControl:false})
+      .setView([lat,lon],17);
 
-  moveInterval = setInterval(()=>{
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {subdomains:"abcd", maxZoom:20}
+    ).addTo(map);
+
+    marker = L.marker([lat,lon]).addTo(map);
+    circle = L.circle([lat,lon],{
+      radius:25,
+      color:"#00ff9c",
+      fillOpacity:0.15
+    }).addTo(map);
+  }
+
+  timer = setInterval(()=>{
     lat += (Math.random()-0.5)*0.0003;
     lon += (Math.random()-0.5)*0.0003;
-
     marker.setLatLng([lat,lon]);
     circle.setLatLng([lat,lon]);
-
-    hudCoord.textContent = "LAT "+lat.toFixed(5)+" | LON "+lon.toFixed(5);
-    hudSpeed.textContent = "SPD "+(20+Math.random()*40).toFixed(1)+" km/h";
+    hudCoord.textContent = `LAT ${lat.toFixed(5)} | LON ${lon.toFixed(5)}`;
+    hudSpeed.textContent = `SPD ${(20+Math.random()*40).toFixed(1)} km/h`;
   },1200);
 }
 
-function initMap(lat, lon){
-  if(map) return;
-
-  map = L.map('map',{zoomControl:false, attributionControl:false})
-    .setView([lat,lon],17);
-
-  /* CARTO DARK — БЕСПЛАТНО, РАБОТАЕТ */
-  L.tileLayer(
-    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    { subdomains: 'abcd', maxZoom: 20 }
-  ).addTo(map);
-
-  marker = L.marker([lat,lon]).addTo(map);
-  circle = L.circle([lat,lon],{
-    radius:25,
-    color:"#00ff9c",
-    fillColor:"#00ff9c",
-    fillOpacity:0.15
-  }).addTo(map);
-}
-
-/* движение фонаря за мышью */
-document.getElementById("map").addEventListener("mousemove", e=>{
-  const r = e.currentTarget.getBoundingClientRect();
-  const x = e.clientX - r.left;
-  const y = e.clientY - r.top;
+/* фонарь за мышью */
+document.getElementById("map").addEventListener("mousemove",e=>{
+  const r=e.currentTarget.getBoundingClientRect();
   flashlight.style.background =
-    `radial-gradient(circle 110px at ${x}px ${y}px,
+    `radial-gradient(circle 130px at ${e.clientX-r.left}px ${e.clientY-r.top}px,
       rgba(0,0,0,0) 0%,
-      rgba(0,0,0,0.15) 45%,
-      rgba(0,0,0,0.45) 70%,
-      rgba(0,0,0,0.65) 100%)`;
+      rgba(0,0,0,0.08) 45%,
+      rgba(0,0,0,0.25) 70%,
+      rgba(0,0,0,0.35) 100%)`;
 });
 </script>
 </body>
