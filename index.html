@@ -78,7 +78,7 @@ button:hover {
   z-index: 400;
 }
 
-/* FLASHLIGHT — ОСЛАБЛЕН */
+/* FLASHLIGHT */
 .flashlight {
   position: absolute;
   inset: 0;
@@ -170,6 +170,19 @@ const flashlight = document.getElementById("flashlight");
 
 let map, marker, circle, timer;
 
+/* 🌍 ГОРОДА + СНГ */
+const cities = [
+  {country:"Россия", city:"Москва", lat:55.7558, lon:37.6173},
+  {country:"Украина", city:"Киев", lat:50.4501, lon:30.5234},
+  {country:"Беларусь", city:"Минск", lat:53.9006, lon:27.5590},
+  {country:"Казахстан", city:"Алматы", lat:43.2389, lon:76.8897},
+  {country:"Узбекистан", city:"Ташкент", lat:41.2995, lon:69.2401},
+  {country:"Азербайджан", city:"Баку", lat:40.4093, lon:49.8671},
+  {country:"Армения", city:"Ереван", lat:40.1872, lon:44.5152},
+  {country:"Грузия", city:"Тбилиси", lat:41.7151, lon:44.8271},
+  {country:"Молдова", city:"Кишинёв", lat:47.0105, lon:28.8638}
+];
+
 function log(t){ term.innerHTML += t+"<br>"; }
 
 async function loadFace(){
@@ -184,11 +197,14 @@ async function start(){
   clearInterval(timer);
   await loadFace();
 
-  log(">> SATELLITE LINK OK");
+  const loc = cities[Math.floor(Math.random()*cities.length)];
+
+  log(">> COUNTRY: " + loc.country);
+  log(">> CITY: " + loc.city);
   log(">> TARGET LOCKED");
 
-  let lat = 52.52 + (Math.random()-0.5)*0.02;
-  let lon = 13.40 + (Math.random()-0.5)*0.02;
+  let lat = loc.lat + (Math.random()-0.5)*0.02;
+  let lon = loc.lon + (Math.random()-0.5)*0.02;
 
   if(!map){
     map = L.map("map",{zoomControl:false, attributionControl:false})
@@ -217,7 +233,7 @@ async function start(){
   },1200);
 }
 
-/* фонарь за мышью */
+/* 🔦 фонарь */
 document.getElementById("map").addEventListener("mousemove",e=>{
   const r=e.currentTarget.getBoundingClientRect();
   flashlight.style.background =
