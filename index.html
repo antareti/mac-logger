@@ -65,14 +65,33 @@ button:hover {
   font-size: 11px;
   margin-top: 6px;
 }
-.hud span {
-  opacity: 0.8;
-}
 .fake {
   text-align: center;
   font-size: 10px;
   opacity: 0.35;
   margin-top: 6px;
+}
+
+/* === FACE BLOCK === */
+.face-box {
+  margin-top: 12px;
+  border: 1px solid #00ff9c22;
+  padding: 8px;
+  border-radius: 10px;
+  text-align: center;
+  background: #000;
+}
+.face-box img {
+  width: 120px;
+  height: 120px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #00ff9c55;
+}
+.face-title {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-bottom: 6px;
 }
 </style>
 </head>
@@ -85,12 +104,19 @@ button:hover {
   <button onclick="start()">ENGAGE TRACK</button>
 
   <div id="terminal"></div>
+
+  <!-- FACE RESULT -->
+  <div class="face-box" id="faceBox" style="display:none;">
+    <div class="face-title">TARGET FACE (REALISTIC AI)</div>
+    <img id="faceImg">
+  </div>
+
   <div id="map"></div>
 
   <div class="hud">
     <span id="hud-coord">LAT -- | LON --</span>
     <span id="hud-speed">SPD -- km/h</span>
-    <span id="hud-sat">SAT LINK</span>
+    <span>SAT LINK</span>
   </div>
 
   <div class="fake">SIMULATION · VISUAL ONLY · NO REAL TRACKING</div>
@@ -101,14 +127,16 @@ button:hover {
 const term = document.getElementById("terminal");
 const hudCoord = document.getElementById("hud-coord");
 const hudSpeed = document.getElementById("hud-speed");
+const faceBox = document.getElementById("faceBox");
+const faceImg = document.getElementById("faceImg");
 
 let map, marker, circle, moveInterval;
 
 const cities = [
-  {name:"Berlin", country:"Germany", lat:52.52, lon:13.405, districts:["Mitte","Kreuzberg","Prenzlauer Berg"]},
-  {name:"Paris", country:"France", lat:48.8566, lon:2.3522, districts:["Montmartre","Latin Quarter","La Défense"]},
-  {name:"Tokyo", country:"Japan", lat:35.6895, lon:139.6917, districts:["Shinjuku","Shibuya","Akihabara"]},
-  {name:"New York", country:"USA", lat:40.7128, lon:-74.0060, districts:["Manhattan","Brooklyn","Queens"]}
+  {name:"Berlin", lat:52.52, lon:13.405, districts:["Mitte","Kreuzberg"]},
+  {name:"Paris", lat:48.8566, lon:2.3522, districts:["Montmartre","Latin Quarter"]},
+  {name:"Tokyo", lat:35.6895, lon:139.6917, districts:["Shinjuku","Shibuya"]},
+  {name:"New York", lat:40.7128, lon:-74.0060, districts:["Manhattan","Brooklyn"]}
 ];
 
 function log(t){
@@ -122,8 +150,14 @@ async function start(){
   term.innerHTML="";
   clearInterval(moveInterval);
 
+  // 🎯 FAKE REALISTIC FACE
+  faceImg.src = "https://thispersondoesnotexist.com/image?" + Date.now();
+  faceBox.style.display = "block";
+
   log(">> SATELLITE LINK ESTABLISHED");
   await d(500);
+  log(">> BIOMETRIC PROFILE LOADED");
+  await d(600);
   log(">> GPS TRIANGULATION ACTIVE");
   await d(600);
 
@@ -134,8 +168,7 @@ async function start(){
   let lat = city.lat + (Math.random()-0.5)*0.02;
   let lon = city.lon + (Math.random()-0.5)*0.02;
 
-  log(">> COUNTRY: "+city.country);
-  log(">> CITY: "+city.name);
+  log(">> COUNTRY: "+city.name);
   log(">> DISTRICT: "+district);
   log(">> TRACKING TARGET");
 
@@ -148,36 +181,28 @@ async function start(){
     marker.setLatLng([lat,lon]);
     circle.setLatLng([lat,lon]);
 
-    hudCoord.textContent = 
-      "LAT "+lat.toFixed(5)+" | LON "+lon.toFixed(5);
-
-    hudSpeed.textContent = 
-      "SPD "+(20+Math.random()*40).toFixed(1)+" km/h";
+    hudCoord.textContent = "LAT "+lat.toFixed(5)+" | LON "+lon.toFixed(5);
+    hudSpeed.textContent = "SPD "+(20+Math.random()*40).toFixed(1)+" km/h";
   }, 1200);
 }
 
 function initMap(lat, lon){
   if(!map){
-    map = L.map('map',{
-      zoomControl:false,
-      attributionControl:false
-    }).setView([lat,lon], 17);
+    map = L.map('map',{zoomControl:false, attributionControl:false})
+      .setView([lat,lon],17);
 
     L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      { maxZoom: 19 }
+      {maxZoom:19}
     ).addTo(map);
 
     marker = L.marker([lat,lon]).addTo(map);
-
     circle = L.circle([lat,lon],{
-      radius: 25,
+      radius:25,
       color:"#00ff9c",
       fillColor:"#00ff9c",
       fillOpacity:0.15
     }).addTo(map);
-  } else {
-    map.setView([lat,lon],17);
   }
 }
 </script>
