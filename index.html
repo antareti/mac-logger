@@ -218,10 +218,10 @@ function initMap(lat, lon){
     map = L.map('map',{zoomControl:false, attributionControl:false})
       .setView([lat,lon],17);
 
-    // бесплатный ночной тайл
+    // Новый хакерский темный тайл (Carto Dark)
     L.tileLayer(
-      "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
-      { maxZoom: 20 }
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      { subdomains: 'abcd', maxZoom: 19 }
     ).addTo(map);
 
     marker = L.marker([lat,lon]).addTo(map);
