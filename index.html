@@ -58,6 +58,20 @@ button:hover {
   height: 280px;
   margin-top: 12px;
   border-radius: 10px;
+  filter: brightness(0.75) contrast(1.2) hue-rotate(90deg); /* зелёный ночной фильтр */
+  position: relative;
+}
+.map-grid {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 19px, rgba(0,255,156,0.05) 20px
+  ),
+  repeating-linear-gradient(
+    90deg, transparent, transparent 19px, rgba(0,255,156,0.05) 20px
+  );
+  pointer-events: none;
+  z-index: 999;
 }
 .hud {
   display: flex;
@@ -205,8 +219,8 @@ function initMap(lat, lon){
       .setView([lat,lon],17);
 
     L.tileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      {maxZoom:19}
+      "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+      {maxZoom:20}
     ).addTo(map);
 
     marker = L.marker([lat,lon]).addTo(map);
@@ -216,6 +230,11 @@ function initMap(lat, lon){
       fillColor:"#00ff9c",
       fillOpacity:0.15
     }).addTo(map);
+
+    // добавляем сетку HUD
+    const grid = document.createElement('div');
+    grid.className = 'map-grid';
+    document.getElementById('map').appendChild(grid);
   }
 }
 </script>
