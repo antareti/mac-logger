@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-/* ===== CORE ===== */
 *{box-sizing:border-box}
 body{
   margin:0;
@@ -21,53 +20,37 @@ body{
   align-items:center;
   overflow:hidden;
 }
-
-/* ===== CRT / SCANLINES ===== */
 body::before{
   content:"";
   position:fixed; inset:0;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      rgba(0,0,0,0) 0px,
-      rgba(0,0,0,0) 2px,
-      rgba(0,0,0,.08) 3px
-    );
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,.08) 3px
+  );
   pointer-events:none;
   z-index:9999;
 }
-body::after{
-  content:"";
-  position:fixed; inset:0;
-  background:radial-gradient(circle at center, rgba(0,255,156,.08), transparent 60%);
-  pointer-events:none;
-}
-
-/* ===== PANEL ===== */
 .panel{
   width:520px;
-  background:rgba(0,0,0,.92);
+  background:rgba(0,0,0,.93);
   border:1px solid #00ff9c33;
   border-radius:16px;
   padding:16px;
-  box-shadow:0 0 40px rgba(0,255,156,.15);
+  box-shadow:0 0 40px rgba(0,255,156,.2);
 }
-
-/* ===== GLITCH TITLE ===== */
 .title{
   text-align:center;
   font-size:18px;
   letter-spacing:3px;
-  position:relative;
   animation:flicker 4s infinite;
 }
 @keyframes flicker{
   0%,97%,100%{opacity:1}
-  98%{opacity:.7}
-  99%{opacity:.4}
+  98%{opacity:.6}
+  99%{opacity:.3}
 }
-
-/* ===== TABS ===== */
 .tabs{
   display:flex;
   gap:6px;
@@ -87,8 +70,6 @@ body::after{
   color:#000;
   font-weight:bold;
 }
-
-/* ===== INPUT / BUTTON ===== */
 input,button{
   width:100%;
   padding:12px;
@@ -103,8 +84,6 @@ button:hover{
   color:#000;
   cursor:pointer;
 }
-
-/* ===== TERMINAL ===== */
 #terminal{
   margin-top:10px;
   background:#000;
@@ -114,8 +93,6 @@ button:hover{
   font-size:12px;
   overflow-y:auto;
 }
-
-/* ===== MAP ===== */
 #map{
   height:260px;
   margin-top:12px;
@@ -136,8 +113,6 @@ button:hover{
   pointer-events:none;
   z-index:500;
 }
-
-/* ===== FACE ===== */
 .face-box{
   margin-top:10px;
   text-align:center;
@@ -148,14 +123,11 @@ button:hover{
   border:1px solid #00ff9c55;
   border-radius:6px;
 }
-
-/* ===== HUD ===== */
 .hud{
   display:flex;
   justify-content:space-between;
   font-size:11px;
   margin-top:6px;
-  opacity:.9;
 }
 .fake{
   text-align:center;
@@ -163,8 +135,6 @@ button:hover{
   opacity:.35;
   margin-top:6px;
 }
-
-/* ===== GENERATOR ===== */
 #genLink{
   display:none;
   margin-top:10px;
@@ -178,66 +148,81 @@ button:hover{
 <body>
 <div class="panel">
 
-  <div class="title">BLACK TRACE :: CONTROL NODE</div>
+<div class="title">BLACK TRACE :: CONTROL NODE</div>
 
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('hud',this)">HUD</div>
-    <div class="tab" onclick="showTab('gen',this)">GENERATOR</div>
-  </div>
-
-  <!-- ===== HUD ===== -->
-  <div id="hudTab">
-    <input placeholder="AA:BB:CC:DD:EE:FF">
-    <button onclick="start()">ENGAGE TRACK</button>
-
-    <div id="terminal"></div>
-
-    <div class="face-box" id="faceBox">
-      <img id="faceImg">
-    </div>
-
-    <div id="map">
-      <div class="map-grid"></div>
-      <div class="flashlight" id="flashlight"></div>
-    </div>
-
-    <div class="hud">
-      <span id="hud-coord">LAT -- | LON --</span>
-      <span id="hud-speed">SPD --</span>
-      <span>SAT LINK</span>
-    </div>
-  </div>
-
-  <!-- ===== GENERATOR ===== -->
-  <div id="genTab" style="display:none">
-    <input id="gid" placeholder="SESSION ID">
-    <button onclick="gen()">GENERATE LINK</button>
-    <a id="genLink" target="_blank"></a>
-  </div>
-
-  <div class="fake">SIMULATION · VISUAL ONLY</div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('hud',this)">HUD</div>
+  <div class="tab" onclick="showTab('gen',this)">GENERATOR</div>
 </div>
+
+<div id="hudTab">
+  <input placeholder="AA:BB:CC:DD:EE:FF">
+  <button onclick="play(sKey); start()">ENGAGE TRACK</button>
+
+  <div id="terminal"></div>
+
+  <div class="face-box" id="faceBox">
+    <img id="faceImg">
+  </div>
+
+  <div id="map">
+    <div class="map-grid"></div>
+    <div class="flashlight" id="flashlight"></div>
+  </div>
+
+  <div class="hud">
+    <span id="hud-coord">LAT -- | LON --</span>
+    <span id="hud-speed">SPD --</span>
+    <span>SAT LINK</span>
+  </div>
+</div>
+
+<div id="genTab" style="display:none">
+  <input id="gid" placeholder="SESSION ID">
+  <button onclick="play(sKey); gen()">GENERATE LINK</button>
+  <a id="genLink" target="_blank"></a>
+</div>
+
+<div class="fake">SIMULATION · VISUAL ONLY</div>
+</div>
+
+<!-- AUDIO -->
+<audio id="beep" src="https://cdn.jsdelivr.net/gh/antareti/assets/beep.mp3"></audio>
+<audio id="radio" src="https://cdn.jsdelivr.net/gh/antareti/assets/radio.mp3"></audio>
+<audio id="key" src="https://cdn.jsdelivr.net/gh/antareti/assets/key.mp3"></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-/* ===== TABS ===== */
+/* === SOUND === */
+const sBeep=document.getElementById("beep");
+const sRadio=document.getElementById("radio");
+const sKey=document.getElementById("key");
+function play(a){
+  if(!a) return;
+  a.currentTime=0;
+  a.volume=0.4;
+  a.play().catch(()=>{});
+}
+
+/* === TABS === */
 function showTab(t,el){
-  document.getElementById("hudTab").style.display=t==="hud"?"block":"none";
-  document.getElementById("genTab").style.display=t==="gen"?"block":"none";
+  hudTab.style.display=t==="hud"?"block":"none";
+  genTab.style.display=t==="gen"?"block":"none";
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
   el.classList.add("active");
 }
 
-/* ===== GENERATOR ===== */
+/* === GENERATOR === */
 function gen(){
-  const id=document.getElementById("gid").value.trim();
+  const id=gid.value.trim();
   if(!id) return alert("NO ID");
   const l=`https://antareti.github.io/mac-logger/trace.html?id=${encodeURIComponent(id)}`;
-  const a=document.getElementById("genLink");
-  a.href=l; a.textContent=l; a.style.display="block";
+  genLink.href=l;
+  genLink.textContent=l;
+  genLink.style.display="block";
 }
 
-/* ===== HUD LOGIC ===== */
+/* === HUD === */
 const term=document.getElementById("terminal");
 const faceBox=document.getElementById("faceBox");
 const faceImg=document.getElementById("faceImg");
@@ -258,6 +243,7 @@ const cities=[
 function log(t){
   term.innerHTML+=t+"<br>";
   term.scrollTop=term.scrollHeight;
+  play(sBeep);
 }
 
 async function loadFace(){
@@ -268,8 +254,11 @@ async function loadFace(){
 }
 
 async function start(){
-  term.innerHTML=""; clearInterval(timer);
+  play(sRadio);
+  term.innerHTML="";
+  clearInterval(timer);
   await loadFace();
+
   const loc=cities[Math.floor(Math.random()*cities.length)];
   log(">> COUNTRY: "+loc.country);
   log(">> CITY: "+loc.city);
@@ -279,7 +268,8 @@ async function start(){
   let lon=loc.lon+(Math.random()-.5)*.02;
 
   if(!map){
-    map=L.map("map",{zoomControl:false,attributionControl:false}).setView([lat,lon],17);
+    map=L.map("map",{zoomControl:false,attributionControl:false})
+      .setView([lat,lon],17);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
       {subdomains:"abcd",maxZoom:20}).addTo(map);
     marker=L.marker([lat,lon]).addTo(map);
@@ -296,12 +286,13 @@ async function start(){
   },1200);
 }
 
-/* ===== FLASHLIGHT ===== */
+/* === FLASHLIGHT === */
+map?.getContainer?.();
 document.getElementById("map").addEventListener("mousemove",e=>{
   const r=e.currentTarget.getBoundingClientRect();
   flashlight.style.background=
     `radial-gradient(circle 130px at ${e.clientX-r.left}px ${e.clientY-r.top}px,
-    rgba(0,0,0,0) 0%, rgba(0,0,0,.1) 45%, rgba(0,0,0,.4) 100%)`;
+    rgba(0,0,0,0) 0%, rgba(0,0,0,.15) 45%, rgba(0,0,0,.45) 100%)`;
 });
 </script>
 </body>
