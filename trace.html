@@ -1,13 +1,15 @@
-<!-- ВСТАВЬ ВЕСЬ ТВОЙ HTML КОД -->
-<!-- И ДОБАВЬ В КОНЕЦ script ↓ -->
+/* === AUTO START FROM LINK (SAFE) === */
+window.addEventListener("DOMContentLoaded", () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
 
-<script>
-const params = new URLSearchParams(location.search);
-if(params.get("id")){
-  window.addEventListener("load",()=>{
-    log(">> LINK ID: "+params.get("id"));
-    log(">> REMOTE SESSION OPEN");
-    start();
-  });
-}
-</script>
+    if (id) {
+      log(">> LINK ID: " + id);
+      log(">> REMOTE SESSION OPEN");
+      start();
+    }
+  } catch (e) {
+    console.error("AUTO START ERROR:", e);
+  }
+});
