@@ -1,0 +1,13 @@
+<!-- ВСТАВЬ ВЕСЬ ТВОЙ HTML КОД -->
+<!-- И ДОБАВЬ В КОНЕЦ script ↓ -->
+
+<script>
+const params = new URLSearchParams(location.search);
+if(params.get("id")){
+  window.addEventListener("load",()=>{
+    log(">> LINK ID: "+params.get("id"));
+    log(">> REMOTE SESSION OPEN");
+    start();
+  });
+}
+</script>
