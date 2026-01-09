@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>BLACK TRACE :: TACTICAL HUD</title>
+<title>BLACK TRACE :: TACTICAL HUD + GENERATOR</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -13,10 +13,11 @@ body {
   background: #000;
   color: #00ff9c;
   font-family: Consolas, monospace;
-  height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
 }
 .panel {
   width: 480px;
@@ -24,6 +25,7 @@ body {
   border: 1px solid #00ff9c22;
   border-radius: 14px;
   padding: 16px;
+  margin-bottom: 20px;
 }
 h1 {
   text-align: center;
@@ -53,8 +55,6 @@ button:hover {
   font-size: 12px;
   overflow-y: auto;
 }
-
-/* MAP */
 #map {
   height: 280px;
   margin-top: 12px;
@@ -62,8 +62,6 @@ button:hover {
   position: relative;
   overflow: hidden;
 }
-
-/* GRID */
 .map-grid {
   position: absolute;
   inset: 0;
@@ -77,8 +75,6 @@ button:hover {
     );
   z-index: 400;
 }
-
-/* FLASHLIGHT */
 .flashlight {
   position: absolute;
   inset: 0;
@@ -93,8 +89,6 @@ button:hover {
       rgba(0,0,0,0.35) 100%
     );
 }
-
-/* FACE */
 .face-box {
   margin-top: 12px;
   border: 1px solid #00ff9c22;
@@ -114,8 +108,6 @@ button:hover {
   opacity: 0.8;
   margin-bottom: 6px;
 }
-
-/* HUD */
 .hud {
   display: flex;
   justify-content: space-between;
@@ -128,10 +120,18 @@ button:hover {
   opacity: 0.35;
   margin-top: 6px;
 }
+/* Генератор ссылки */
+#generator a {
+  display: block;
+  margin-top: 10px;
+  color: #00ff9c;
+  text-decoration: underline;
+}
 </style>
 </head>
 
 <body>
+<!-- HUD PANEL -->
 <div class="panel">
   <h1>BLACK TRACE :: TACTICAL HUD</h1>
 
@@ -159,8 +159,17 @@ button:hover {
   <div class="fake">SIMULATION · VISUAL ONLY</div>
 </div>
 
+<!-- GENERATOR PANEL -->
+<div class="panel" id="generator">
+  <h1>Сгенерировать ссылку на трекер</h1>
+  <input type="text" id="linkId" placeholder="Введите ID">
+  <button onclick="generateLink()">Сгенерировать ссылку</button>
+  <a id="generatedLink" href="#" target="_blank" style="display:none;"></a>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// HUD LOGIC
 const term = document.getElementById("terminal");
 const faceBox = document.getElementById("faceBox");
 const faceImg = document.getElementById("faceImg");
@@ -170,7 +179,6 @@ const flashlight = document.getElementById("flashlight");
 
 let map, marker, circle, timer;
 
-/* 🌍 ГОРОДА + СНГ */
 const cities = [
   {country:"Россия", city:"Москва", lat:55.7558, lon:37.6173},
   {country:"Украина", city:"Киев", lat:50.4501, lon:30.5234},
@@ -183,7 +191,7 @@ const cities = [
   {country:"Молдова", city:"Кишинёв", lat:47.0105, lon:28.8638}
 ];
 
-function log(t){ term.innerHTML += t+"<br>"; }
+function log(t){ term.innerHTML += t+"<br>"; term.scrollTop = term.scrollHeight; }
 
 async function loadFace(){
   const r = await fetch("https://randomuser.me/api/?inc=picture&noinfo");
@@ -198,7 +206,6 @@ async function start(){
   await loadFace();
 
   const loc = cities[Math.floor(Math.random()*cities.length)];
-
   log(">> COUNTRY: " + loc.country);
   log(">> CITY: " + loc.city);
   log(">> TARGET LOCKED");
@@ -207,20 +214,10 @@ async function start(){
   let lon = loc.lon + (Math.random()-0.5)*0.02;
 
   if(!map){
-    map = L.map("map",{zoomControl:false, attributionControl:false})
-      .setView([lat,lon],17);
-
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {subdomains:"abcd", maxZoom:20}
-    ).addTo(map);
-
+    map = L.map("map",{zoomControl:false, attributionControl:false}).setView([lat,lon],17);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{subdomains:"abcd", maxZoom:20}).addTo(map);
     marker = L.marker([lat,lon]).addTo(map);
-    circle = L.circle([lat,lon],{
-      radius:25,
-      color:"#00ff9c",
-      fillOpacity:0.15
-    }).addTo(map);
+    circle = L.circle([lat,lon],{radius:25,color:"#00ff9c",fillOpacity:0.15}).addTo(map);
   }
 
   timer = setInterval(()=>{
@@ -233,16 +230,35 @@ async function start(){
   },1200);
 }
 
-/* 🔦 фонарь */
+// FLASHLIGHT
 document.getElementById("map").addEventListener("mousemove",e=>{
   const r=e.currentTarget.getBoundingClientRect();
   flashlight.style.background =
     `radial-gradient(circle 130px at ${e.clientX-r.left}px ${e.clientY-r.top}px,
-      rgba(0,0,0,0) 0%,
-      rgba(0,0,0,0.08) 45%,
-      rgba(0,0,0,0.25) 70%,
-      rgba(0,0,0,0.35) 100%)`;
+      rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.35) 100%)`;
 });
+
+// AUTO START FROM LINK (trace.html)
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (id) {
+    log(">> LINK ID: " + id);
+    log(">> REMOTE SESSION OPEN");
+    start();
+  }
+});
+
+// GENERATOR LOGIC
+function generateLink(){
+  const id = document.getElementById("linkId").value.trim();
+  if(!id) return alert("Введите ID");
+  const link = `https://antareti.github.io/mac-logger/trace.html?id=${encodeURIComponent(id)}`;
+  const a = document.getElementById("generatedLink");
+  a.href = link;
+  a.textContent = link;
+  a.style.display = "block";
+}
 </script>
 </body>
 </html>
