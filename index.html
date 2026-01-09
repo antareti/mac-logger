@@ -27,7 +27,7 @@ body::before{
     to bottom,
     rgba(0,0,0,0) 0px,
     rgba(0,0,0,0) 2px,
-    rgba(0,0,0,.08) 3px
+    rgba(0,255,156,.05) 3px
   );
   pointer-events:none;
   z-index:9999;
@@ -157,7 +157,7 @@ button:hover{
 
 <div id="hudTab">
   <input placeholder="AA:BB:CC:DD:EE:FF">
-  <button onclick="play(sKey); start()">ENGAGE TRACK</button>
+  <button onclick="unlockAudio(); play(sKey); start()">ENGAGE TRACK</button>
 
   <div id="terminal"></div>
 
@@ -172,14 +172,14 @@ button:hover{
 
   <div class="hud">
     <span id="hud-coord">LAT -- | LON --</span>
-    <span id="hud-speed">SPD --</span>
+    <span id="hud-speed">SPD -- km/h</span>
     <span>SAT LINK</span>
   </div>
 </div>
 
 <div id="genTab" style="display:none">
   <input id="gid" placeholder="SESSION ID">
-  <button onclick="play(sKey); gen()">GENERATE LINK</button>
+  <button onclick="unlockAudio(); play(sKey); gen()">GENERATE LINK</button>
   <a id="genLink" target="_blank"></a>
 </div>
 
@@ -197,11 +197,16 @@ button:hover{
 const sBeep=document.getElementById("beep");
 const sRadio=document.getElementById("radio");
 const sKey=document.getElementById("key");
-function play(a){
-  if(!a) return;
-  a.currentTime=0;
-  a.volume=0.4;
-  a.play().catch(()=>{});
+
+let audioUnlocked=false;
+function unlockAudio(){
+  if(audioUnlocked) return;
+  [sBeep,sRadio,sKey].forEach(a=>{
+    a.play().then(()=>a.pause()).catch(()=>{});
+    a.currentTime=0;
+  });
+  audioUnlocked=true;
+  document.body.removeEventListener('click',unlockAudio);
 }
 
 /* === TABS === */
